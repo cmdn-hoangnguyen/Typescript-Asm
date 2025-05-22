@@ -17,11 +17,19 @@ class StudentManager {
     constructor() {
         this.studentDatabase = {};
     }
+    updateStudentDatabase(updatedStudents) {
+        return (this.studentDatabase = Object.fromEntries(updatedStudents.map((student) => [student.id, student])));
+    }
     addStudent(student) {
         if (student.role === Role.Admin) {
             throw new Error("Cannot add a student with admin role");
         }
-        this.studentDatabase[student.id] = student;
+        if (this.studentDatabase[student.id]) {
+            throw new Error("This student already exists");
+        }
+        const arrayStudents = Object.values(this.studentDatabase);
+        const updatedStudents = addItem(arrayStudents, student);
+        this.updateStudentDatabase(updatedStudents);
         return this.studentDatabase;
     }
     getStudentSummary(id) {
@@ -60,6 +68,13 @@ manager.addStudent({
     role: Role.Student,
 });
 manager.addGrade(2, 90);
+manager.addStudent({
+    id: 3,
+    name: "Last one",
+    grades: [50],
+    role: Role.TeachingAssistant,
+});
 console.table(manager.getStudentSummary(1));
 console.table(manager.getStudentSummary(2));
+console.table(manager.getStudentSummary(3));
 console.table(manager.getDatabase());

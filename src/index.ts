@@ -34,12 +34,26 @@ type StudentDatabase = Record<Student["id"], Student>;
 export class StudentManager {
   private studentDatabase: StudentDatabase = {};
 
+  updateStudentDatabase(updatedStudents: Student[]) {
+    return (this.studentDatabase = Object.fromEntries(
+      updatedStudents.map((student) => [student.id, student])
+    ) as StudentDatabase);
+  }
+
   addStudent(student: Student) {
     if ((student.role as unknown as Role) === Role.Admin) {
       throw new Error("Cannot add a student with admin role");
     }
 
-    this.studentDatabase[student.id] = student;
+    if (this.studentDatabase[student.id]) {
+      throw new Error("This student already exists");
+    }
+
+    const arrayStudents = Object.values(this.studentDatabase);
+    const updatedStudents = addItem(arrayStudents, student);
+
+    this.updateStudentDatabase(updatedStudents);
+
     return this.studentDatabase;
   }
 
@@ -88,6 +102,14 @@ manager.addStudent({
 });
 manager.addGrade(2, 90);
 
+manager.addStudent({
+  id: 3,
+  name: "Last one",
+  grades: [50],
+  role: Role.TeachingAssistant,
+});
+
 console.table(manager.getStudentSummary(1));
 console.table(manager.getStudentSummary(2));
+console.table(manager.getStudentSummary(3));
 console.table(manager.getDatabase());
