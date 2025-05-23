@@ -14,13 +14,13 @@ interface Student {
 }
 
 // Ex-3 Generics: Write a generic function addItem<T> to add items (e.g., students or grades) to an array,
-function addItem<T>(arrayItems: T[], item: T): T[] {
+const addItem = <T>(arrayItems: T[], item: T): T[] => {
   return [...arrayItems, item];
-}
+};
 
 //Ex-4 Mapped Type: Create a mapped type ReadOnlyStudent
 type ReadOnlyStudent = {
-  [K in keyof Student as `readonly ${K}`]: Student[K];
+  readonly [K in keyof Student]: Student[K];
 };
 
 // EX-5 Utility Types
@@ -34,14 +34,8 @@ type StudentDatabase = Record<Student["id"], Student>;
 export class StudentManager {
   private studentDatabase: StudentDatabase = {};
 
-  updateStudentDatabase(updatedStudents: Student[]) {
-    return (this.studentDatabase = Object.fromEntries(
-      updatedStudents.map((student) => [student.id, student])
-    ) as StudentDatabase);
-  }
-
   addStudent(student: Student) {
-    if ((student.role as unknown as Role) === Role.Admin) {
+    if ((student.role as Role) === Role.Admin) {
       throw new Error("Cannot add a student with admin role");
     }
 
@@ -49,16 +43,18 @@ export class StudentManager {
       throw new Error("This student already exists");
     }
 
-    const arrayStudents = Object.values(this.studentDatabase);
-    const updatedStudents = addItem(arrayStudents, student);
-
-    this.updateStudentDatabase(updatedStudents);
+    const arrayStudents = addItem(Object.values(this.studentDatabase), student);
+    this.studentDatabase[student.id] = arrayStudents[arrayStudents.length - 1];
 
     return this.studentDatabase;
   }
 
-  getStudentSummary(id: number): StudentSummary | undefined {
-    const selectedStudent = this.studentDatabase[id];
+  getStudentSummary({
+    studentId,
+  }: {
+    studentId: number;
+  }): StudentSummary | undefined {
+    const selectedStudent = this.studentDatabase[studentId];
 
     if (!selectedStudent) {
       throw new Error("Student not found");
@@ -69,7 +65,7 @@ export class StudentManager {
     return { name, role };
   }
 
-  addGrade(studentId: number, grade: number) {
+  addGrade({ studentId, grade }: { studentId: number; grade: number }) {
     const selectedStudent = this.studentDatabase[studentId];
 
     if (!selectedStudent) {
@@ -85,31 +81,37 @@ export class StudentManager {
   }
 }
 
-const manager = new StudentManager();
-manager.addStudent({
+const student1: Student = {
   id: 1,
   name: "Hello it's me",
   grades: [100],
   role: Role.Student,
-});
-manager.addGrade(1, 80);
+};
 
-manager.addStudent({
+const student2: Student = {
   id: 2,
   name: "Second me",
-  grades: [70],
+  grades: [80],
   role: Role.Student,
-});
-manager.addGrade(2, 90);
+};
 
-manager.addStudent({
+const student3: Student = {
   id: 3,
   name: "Last one",
-  grades: [50],
+  grades: [60],
   role: Role.TeachingAssistant,
-});
+};
 
-console.table(manager.getStudentSummary(1));
-console.table(manager.getStudentSummary(2));
-console.table(manager.getStudentSummary(3));
+const manager = new StudentManager();
+manager.addStudent(student1);
+manager.addGrade({ studentId: student1.id, grade: 80 });
+
+manager.addStudent(student2);
+manager.addGrade({ studentId: student2.id, grade: 90 });
+
+manager.addStudent(student3);
+
+console.table(manager.getStudentSummary({ studentId: student1.id }));
+console.table(manager.getStudentSummary({ studentId: student2.id }));
+console.table(manager.getStudentSummary({ studentId: student3.id }));
 console.table(manager.getDatabase());

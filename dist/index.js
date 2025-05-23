@@ -9,16 +9,13 @@ var Role;
     Role["Admin"] = "ADMIN";
 })(Role || (Role = {}));
 // Ex-3 Generics: Write a generic function addItem<T> to add items (e.g., students or grades) to an array,
-function addItem(arrayItems, item) {
+const addItem = (arrayItems, item) => {
     return [...arrayItems, item];
-}
+};
 // EX-6 Class: Implement a StudentManager class
 class StudentManager {
     constructor() {
         this.studentDatabase = {};
-    }
-    updateStudentDatabase(updatedStudents) {
-        return (this.studentDatabase = Object.fromEntries(updatedStudents.map((student) => [student.id, student])));
     }
     addStudent(student) {
         if (student.role === Role.Admin) {
@@ -27,20 +24,19 @@ class StudentManager {
         if (this.studentDatabase[student.id]) {
             throw new Error("This student already exists");
         }
-        const arrayStudents = Object.values(this.studentDatabase);
-        const updatedStudents = addItem(arrayStudents, student);
-        this.updateStudentDatabase(updatedStudents);
+        const arrayStudents = addItem(Object.values(this.studentDatabase), student);
+        this.studentDatabase[student.id] = arrayStudents[arrayStudents.length - 1];
         return this.studentDatabase;
     }
-    getStudentSummary(id) {
-        const selectedStudent = this.studentDatabase[id];
+    getStudentSummary({ studentId, }) {
+        const selectedStudent = this.studentDatabase[studentId];
         if (!selectedStudent) {
             throw new Error("Student not found");
         }
         const { name, role } = selectedStudent;
         return { name, role };
     }
-    addGrade(studentId, grade) {
+    addGrade({ studentId, grade }) {
         const selectedStudent = this.studentDatabase[studentId];
         if (!selectedStudent) {
             throw new Error("Student not found");
@@ -53,28 +49,31 @@ class StudentManager {
     }
 }
 exports.StudentManager = StudentManager;
-const manager = new StudentManager();
-manager.addStudent({
+const student1 = {
     id: 1,
     name: "Hello it's me",
     grades: [100],
     role: Role.Student,
-});
-manager.addGrade(1, 80);
-manager.addStudent({
+};
+const student2 = {
     id: 2,
     name: "Second me",
-    grades: [70],
+    grades: [80],
     role: Role.Student,
-});
-manager.addGrade(2, 90);
-manager.addStudent({
+};
+const student3 = {
     id: 3,
     name: "Last one",
-    grades: [50],
+    grades: [60],
     role: Role.TeachingAssistant,
-});
-console.table(manager.getStudentSummary(1));
-console.table(manager.getStudentSummary(2));
-console.table(manager.getStudentSummary(3));
+};
+const manager = new StudentManager();
+manager.addStudent(student1);
+manager.addGrade({ studentId: student1.id, grade: 80 });
+manager.addStudent(student2);
+manager.addGrade({ studentId: student2.id, grade: 90 });
+manager.addStudent(student3);
+console.table(manager.getStudentSummary({ studentId: student1.id }));
+console.table(manager.getStudentSummary({ studentId: student2.id }));
+console.table(manager.getStudentSummary({ studentId: student3.id }));
 console.table(manager.getDatabase());
